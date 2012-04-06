@@ -1,93 +1,38 @@
 #!/usr/bin/env ruby
-
-require "date"
-require "json"
-require "logger"
-require "mechanize"
-require "./secrets"
-
-#Mechanize.log = Logger.new $stderr
+# vim: et ts=2 sw=2
 
 module ICloud
-  class Session
-    def initialize user, pass
-      @user = user
-      @pass = pass
-      @agent = nil
-    end
-    
-    def login!
-      if @agent.nil?
-        @agent = Mechanize.new
-        @agent.post login_url, body.to_json, headers
-      end
-    end
-
-    # Perform a GET request in this session.
-    def get(url, p={}, h={})
-      login!
-      @agent.get url, params(p), nil, headers(h)
-    end
-    
-    def reminders
-      Reminders.new self
-    end
-
-    private
-    
-    def headers more={}
-      { "origin"=>"https://www.icloud.com" }.update(more)
-    end
-    
-    def params more={}
-      { "lang"=>"en-us", "usertz"=>"America/New_York", "dsid"=>dsid }.update(more)
-    end
-    
-    # Extract the current DSID from the cookies.
-    def dsid
-      @agent.cookie_jar.jar["icloud.com"]["/"]["X-APPLE-WEBAUTH-USER"].value.match(/d=(\d+)/)[1]
-    end
-
-    def login_url
-      "https://setup.icloud.com/setup/ws/1/login"
-    end
-
-    def body
-      { :apple_id=>@user, :password=>@pass, :extended_login=>false }
-    end
-  end
-
   class Reminders
     def initialize session
       @session = session
       @cache = nil
       update!
     end
-
+  
     def all
       @cache["Todo"].map do |data|
         Reminder.new self, data
       end
     end
-
+  
     def alarm guid
       data = @cache["Alarm"].find do |data|
         data["guid"] == guid
       end
-
+  
       if data
         Alarm.new self, data
       else
         nil
       end
     end
-
+  
     private
-
+  
     def update!
       @cache = fetch!
     end
-
+  
     def fetch!
       JSON.parse @session.get(url).body
     end
@@ -96,8 +41,8 @@ module ICloud
       "https://p06-calendarws.icloud.com/ca/todos"
     end
   end
-
-
+  
+  
   # {
   # "description"=>"Event reminder",
   # "isLocationBased"=>false,
@@ -112,7 +57,7 @@ module ICloud
       @set = set
       @data = data
     end
-
+  
     def date_time
       if @data.has_key? "onDate"
         _, year, month, mday, hour, minute, _ = @data["onDate"]
@@ -121,18 +66,18 @@ module ICloud
         nil
       end
     end
-
+  
     def to_s
       if date_time
         date_time.strftime "on %d/%m/%Y at %I:%M%p"
-
+  
       else
         "(no time)"
       end
     end
   end
-
-
+  
+  
   # {
   # "updatedByNameFirst"=>nil,
   # "updatedByName"=>nil,
@@ -160,7 +105,7 @@ module ICloud
       @set = set
       @data = data
     end
-
+  
     def title
       @data["title"]
     end
@@ -170,12 +115,9 @@ module ICloud
         @set.alarm guid
       end
     end
-
+  
     def to_s
       title + " -- " + alarms.join(", ")
     end
   end
 end
-
-s = ICloud::Session.new($user, $pass)
-puts s.reminders.all
