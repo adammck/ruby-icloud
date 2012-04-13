@@ -21,7 +21,7 @@ module ICloud
       end
   
       if data
-        Alarm.new self, data
+        Alarm.from_icloud data
       else
         nil
       end
@@ -39,41 +39,6 @@ module ICloud
     
     def url
       "https://p06-calendarws.icloud.com/ca/todos"
-    end
-  end
-  
-  
-  # {
-  # "description"=>"Event reminder",
-  # "isLocationBased"=>false,
-  # "pGuid"=>"1C779FF9-FBEC-4400-A5C7-5EFF2057680E",
-  # "messageType"=>"message",
-  # "onDate"=>[20111128, 2011, 11, 28, 9, 0, 540],
-  # "guid"=>
-  # "1C779FF9-FBEC-4400-A5C7-5EFF2057680E:9CA73BCB-5902-40EC-B6D9-8F0FD8AA1A95"
-  # }
-  class Alarm
-    def initialize set, data
-      @set = set
-      @data = data
-    end
-  
-    def date_time
-      if @data.has_key? "onDate"
-        _, year, month, mday, hour, minute, _ = @data["onDate"]
-        DateTime.new year, month, mday, hour, minute
-      else
-        nil
-      end
-    end
-  
-    def to_s
-      if date_time
-        date_time.strftime "on %d/%m/%Y at %I:%M%p"
-  
-      else
-        "(no time)"
-      end
     end
   end
   
@@ -117,7 +82,7 @@ module ICloud
     end
   
     def to_s
-      title + " -- " + alarms.join(", ")
+      title + " -- " + alarms.map(&:to_s).join(", ")
     end
   end
 end
