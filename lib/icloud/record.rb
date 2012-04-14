@@ -6,11 +6,13 @@ module ICloud
   # Public: Mixin to allow a class to be serialized and unserialized into the
   # format spoken by the icloud.com private JSON API.
   module Record
+
     def self.included base
       base.extend ClassMethods
     end
 
-    # Public: Serialize this record into an iCloud-ish (camelCased) hash.
+    # Public: Serialize this record's fields into a camelCased-keys hash, ready
+    # to be sent to iCloud.
     #
     # Examples
     #
@@ -29,18 +31,52 @@ module ICloud
     #
     # Returns the serialized hash.
     def to_icloud
-      self.class.to_icloud self
+      Hash.new.tap do |hsh|
+        dump.each do |name, val|
+          hsh[ICloud.camel_case(name)] = val
+        end
+      end
     end
 
+    # Internal: Serialize this record.
+    # Returns the serialized hash.
+    def dump
+      Hash.new.tap do |hsh|
+        self.class.fields.each do |name|
+          hsh[name] = send name
+        end
+      end
+    end
+
+    # Public: Store a copy of this record.
+    # Returns nothing.
+    def snapshot!
+      @snapshot = dump
+    end
+
+    # Public: Returns true if this record has changed since `snapshot!` was last
+    # called, or if snapshot has never been called.
+    def changed?
+      @snapshot.nil? or (@snapshot != dump)
+    end
+
+
+
+
     module ClassMethods
+
+      # Public: Returns the field names of this record.
+      def fields
+        @fields or []
+      end
 
       # Public: Add named fields to this record. This creates the accessors, and
       # keeps track of the field names for [un-]serialization later via the
       # to_icloud and from_icloud methods.
       #
       # Returns nothing.
-      def fields *names
-        ensure_fields_storage
+      def has_fields *names
+        @fields ||= []
 
         names.map(&:to_s).each do |name|
           attr_accessor name
@@ -72,46 +108,9 @@ module ICloud
       # Returns the new record.
       def from_icloud hsh
         self.new.tap do |record|
-          @fields.each do |name|
-            record.send "#{name}=", hsh[camel_case(name)]
+          fields.each do |name|
+            record.send "#{name}=", hsh[ICloud.camel_case(name)]
           end
-        end
-      end
-
-      # Internal: Serialize a record into an iCloud-ish (camelCased) hash. This
-      # class method is only public so the same-named instance method can call
-      # it. Look there for usage examples.
-      #
-      # Returns the hash.
-      def to_icloud obj
-        Hash.new.tap do |hsh|
-          @fields.each do |name|
-            hsh[camel_case(name)] = obj.send name
-          end
-        end
-      end
-
-
-      private
-
-      # Convert a camelCased string to snake_case.
-      def snake_case str
-        str.gsub /(.)([A-Z])/ do
-          "#{$1}_#{$2.downcase}"
-        end.downcase
-      end
-
-      # Convert a snake_cased string to camelCase.
-      def camel_case str
-        str.gsub /_([a-z])/ do
-          $1.upcase
-        end
-      end
-
-      # Initialize @fields as an empty array, unless it already exists.
-      def ensure_fields_storage
-        if @fields.nil?
-          @fields = []
         end
       end
     end

@@ -4,7 +4,7 @@
 module ICloud
   class Todo
     include Record
-    fields :description, :etag, :location, :title
+    has_fields :description, :etag, :location, :title
 
     def to_s
       title

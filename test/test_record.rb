@@ -9,7 +9,7 @@ class TestRecord < MiniTest::Unit::TestCase
   def setup
     @cls = Class.new do
       include ICloud::Record
-      fields :first_name, :last_name
+      has_fields :first_name, :last_name
     end
   end
 
@@ -35,5 +35,17 @@ class TestRecord < MiniTest::Unit::TestCase
     assert_equal "Adam", record.first_name
     assert_equal "Mckaig", record.last_name
     refute_respond_to record, :junk
+  end
+
+  def test_snapshots
+    record = @cls.new.tap do |r|
+      r.first_name = "Adam"
+    end
+
+    record.snapshot!
+    refute record.changed?
+
+    record.last_name = "Mckaig"
+    assert record.changed?
   end
 end

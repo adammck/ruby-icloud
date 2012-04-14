@@ -4,7 +4,7 @@
 module ICloud
   class Alarm
     include Record
-    fields :description, :guid, :is_location_based, :message_type, :on_date, :p_guid
+    has_fields :description, :guid, :is_location_based, :message_type, :on_date, :p_guid
 
     def to_s
       if date

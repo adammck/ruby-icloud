@@ -9,6 +9,8 @@ module ICloud
 end
 
 require "icloud/helpers/date_helpers"
+require "icloud/helpers/inflections"
+
 require "icloud/record"
 
 require "icloud/plumbing/alarm"
