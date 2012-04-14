@@ -2,7 +2,6 @@
 # vim: et ts=2 sw=2
 
 module ICloud
-
   class Todo
     include Record
     fields :description, :etag, :location, :title

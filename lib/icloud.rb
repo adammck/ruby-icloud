@@ -11,9 +11,9 @@ end
 require "icloud/helpers/date_helpers"
 require "icloud/record"
 
-require "icloud/alarm"
-require "icloud/login"
+require "icloud/plumbing/alarm"
+require "icloud/plumbing/todo"
+
 require "icloud/reminders"
 require "icloud/session"
-require "icloud/todo"
 require "icloud/version"
