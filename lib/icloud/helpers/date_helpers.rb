@@ -4,7 +4,6 @@
 require "date"
 
 module ICloud
-
   def self.date_from_icloud obj
     _, year, month, mday, hour, minute, _ = obj
     DateTime.new year, month, mday, hour, minute

@@ -21,23 +21,25 @@ class TestAlarm < MiniTest::Unit::TestCase
     alarm = ICloud::Alarm.from_icloud(@dump)
 
     assert_equal @dump["messageType"],       alarm.message_type
-    assert_equal @dump["pGuid"],             alarm.parent_guid
+    assert_equal @dump["pGuid"],             alarm.p_guid
     assert_equal @dump["guid"],              alarm.guid
     assert_equal @dump["description"],       alarm.description
     assert_equal @dump["isLocationBased"],   alarm.is_location_based
+    assert_equal @dump["onDate"],            alarm.on_date
 
-    assert_equal "2013-01-01 09:00", alarm.date.strftime("%F %R")
+    #assert_equal "2013-01-01 09:00", alarm.on_date.strftime("%F %R")
   end
 
   def test_can_serialize_to_icloud
     alarm = ICloud::Alarm.new.tap do |a|
       a.message_type      = @dump["messageType"]
-      a.parent_guid       = @dump["pGuid"]
+      a.p_guid            = @dump["pGuid"]
       a.guid              = @dump["guid"]
       a.description       = @dump["description"]
       a.is_location_based = @dump["isLocationBased"]
+      a.on_date           = [20130101, 2013, 1, 1, 9, 0, 540]
 
-      a.date = DateTime.new 2013, 1, 1, 9
+      #a.on_date = DateTime.new 2013, 1, 1, 9
     end
 
     assert_equal @dump, alarm.to_icloud
