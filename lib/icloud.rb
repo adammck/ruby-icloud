@@ -15,6 +15,7 @@ require "icloud/record"
 
 require "icloud/plumbing/alarm"
 require "icloud/plumbing/collection"
+require "icloud/plumbing/pool"
 require "icloud/plumbing/todo"
 
 require "icloud/reminders"

@@ -5,38 +5,32 @@ module ICloud
   class Reminders
     def initialize session
       @session = session
-      @cache = nil
+      @pool = Pool.new
       update!
     end
-  
+
     def all
-      @cache["Todo"].map do |data|
-        Todo.from_icloud data
-      end
+      @pool.todos
     end
-  
-    def alarm guid
-      data = @cache["Alarm"].find do |data|
-        data["guid"] == guid
-      end
-  
-      if data
-        Alarm.from_icloud data
-      else
-        nil
-      end
-    end
-  
+
     private
-  
+
     def update!
-      @cache = fetch!
+      data = fetch!
+
+      data["Alarm"].each do |data|
+        @pool.add Alarm.from_icloud data
+      end
+
+      data["Todo"].each do |data|
+        @pool.add Todo.from_icloud data
+      end
     end
-  
+
     def fetch!
       JSON.parse @session.get(url).body
     end
-    
+
     def url
       "https://p06-calendarws.icloud.com/ca/todos"
     end
