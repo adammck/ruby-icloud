@@ -10,7 +10,30 @@ module ICloud
     def add obj
       @objects.push obj
     end
+
+    def get guid
+      @objects.find do |obj|
+        obj.guid == guid
+      end
+    end
     
+    def find hsh
+      @objects.select do |obj|
+        hsh.all? do |k, v|
+          obj.send(k) == v
+        end
+      end
+    end
+
+    def changed
+      @objects.select do |obj|
+        obj.changed?
+      end
+    end
+
+
+
+
     def alarms
       find_by_type Alarm
     end

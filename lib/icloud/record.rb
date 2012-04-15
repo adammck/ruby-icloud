@@ -111,6 +111,8 @@ module ICloud
           fields.each do |name|
             record.send "#{name}=", hsh[ICloud.camel_case(name)]
           end
+
+          record.snapshot!
         end
       end
     end

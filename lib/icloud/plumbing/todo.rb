@@ -9,9 +9,5 @@ module ICloud
                :etag, :extended_details_are_included, :guid, :has_attachments,
                :last_modified_date, :p_guid, :title, :updated_by_date, :updated_by_name,
                :updated_by_name_first, :updated_by_name_last
-
-    def to_s
-      title
-    end
   end
 end
