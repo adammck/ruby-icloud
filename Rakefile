@@ -8,7 +8,7 @@ require "icloud"
 
 desc "Dump reminders"
 task :reminders do
-  session = ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"])
+  session = ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"], ENV["APPLE_SHARD"])
 
   reminder = session.reminders.find do |r|
     r.title == "Modified"
