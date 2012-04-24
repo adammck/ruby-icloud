@@ -5,11 +5,10 @@ require "rake/testtask"
 
 $LOAD_PATH << File.expand_path("./lib", File.dirname(__FILE__))
 require "icloud"
-require "./secrets"
 
 desc "Dump reminders"
 task :reminders do
-  session = ICloud::Session.new($APPLE_ID, $PASSWORD)
+  session = ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"])
 
   reminder = session.reminders.find do |r|
     r.title == "Modified"
