@@ -6,6 +6,7 @@ module ICloud
     include Record
     has_fields(
       :alarms,
+      :completed_date,
       :created_by_date,
       :created_by_name,
       :created_by_name_first,

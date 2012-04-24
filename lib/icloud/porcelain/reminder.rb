@@ -30,12 +30,22 @@ module ICloud
       end
     end
 
+    def completed?
+      todo.completed_date != nil
+    end
+
     def to_s
+      s = [title]
+
       if remind_at
-        "%s (remind at %s on %s)" % [title, time(remind_at), date(remind_at)]
-      else
-        title
+        s.push  "(remind at %s on %s)" % [time(remind_at), date(remind_at)]
       end
+
+      if completed?
+        s.push "(completed)"
+      end
+
+      s.join " "
     end
 
     private
