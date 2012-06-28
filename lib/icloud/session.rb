@@ -5,8 +5,8 @@ module ICloud
   class Session
     attr_reader :driver, :pool
 
-    def initialize user, pass, shard
-      @driver = Driver.new(user, pass, shard)
+    def initialize user, pass, shard, client_id=nil
+      @driver = Driver.new(user, pass, shard, client_id)
       @pool = Pool.new
     end
 
@@ -21,11 +21,8 @@ module ICloud
     private
 
     def update!
-      @driver.all_todos.each do |type, objects|
-        cls = record_type type
-      
-        objects.each do |hsh|
-          record = cls.from_icloud hsh
+      @driver.todos_and_alarms.each do |type_name, records|
+        records.each do |record|
           @pool.add record
         end
       end
