@@ -9,13 +9,7 @@ require "icloud"
 desc "Dump reminders"
 task :reminders do
   session = ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"], ENV["APPLE_SHARD"])
-
-  reminder = session.reminders.find do |r|
-    r.title == "Modified"
-  end
-
-  reminder.title = "Alpha"
-  reminder.save!
+  puts session.reminders.inspect
 end
 
 Rake::TestTask.new do |t|
