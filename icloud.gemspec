@@ -15,6 +15,9 @@ Gem::Specification.new do |gem|
   gem.add_dependency "mechanize"
   gem.add_dependency "uuidtools"
 
+  gem.add_development_dependency "webmock"
+  gem.add_development_dependency "vcr"
+
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
