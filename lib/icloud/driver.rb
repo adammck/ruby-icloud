@@ -35,6 +35,11 @@ module ICloud
       records get "https://p#{shard}-calendarws.icloud.com/ca/todos"
     end
 
+    def reminders
+      url = @services["reminders"] + "/rd/startup"
+      records(get(url))["Reminder"]
+    end
+
     def commit_todo todo
       # params? startDate, endDate
 
@@ -146,6 +151,7 @@ module ICloud
     def records data
       Hash.new.tap do |hsh|
         data.each do |name, records|
+          name = name.gsub(/s$/, "")
           cls = record_class(name)
 
           hsh[name] = records.map do |hsh|

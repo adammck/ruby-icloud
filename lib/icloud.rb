@@ -12,9 +12,11 @@ require "icloud/plumbing/alarm"
 require "icloud/plumbing/collection"
 require "icloud/plumbing/dsinfo"
 require "icloud/plumbing/pool"
+require "icloud/plumbing/reminder"
 require "icloud/plumbing/todo"
 
-require "icloud/porcelain/reminder"
+# Temporary?
+#require "icloud/porcelain/reminder"
 
 require "icloud/driver"
 require "icloud/errors"

@@ -5,27 +5,16 @@ module ICloud
   class Collection
     include Record
     has_fields(
-      :color,
-      :created_date,
       :ctag,
-      :description,
-      :email_notifications,
-      :enabled,
-      :etag,
-      :extended_details_are_included,
-      :guid,
-      :is_default,
-      :last_modified_date,
-      :object_type,
-      :order,
+      :title,
+      :created_date_extended,
+      :completed_count,
       :participants,
-      :published_url,
-      :read_only,
-      :share_title,
-      :share_type,
-      :subscribed_url,
-      :supported_type,
-      :title
+      :collection_share_type,
+      :created_date,
+      :guid,
+      :email_notifications,
+      :order
     )
   end
 end
