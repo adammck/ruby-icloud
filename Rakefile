@@ -9,8 +9,10 @@ require "icloud"
 desc "Dump reminders"
 task :reminders do
   session = ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"])
-  puts "Incomplete reminders for #{session.user.full_name}"
-  puts session.driver.reminders.map(&:title)
+  puts "Reminders for #{session.user.full_name}"
+  session.driver.reminders.each_with_index do |reminder, i|
+    puts "#{i+1}. #{reminder.title}"
+  end
 end
 
 Rake::TestTask.new do |t|
