@@ -2,6 +2,19 @@
 
 This is a Ruby library to access iCloud reminders.
 
+## Try it
+
+```
+$ git clone https://github.com/adammck/ruby-icloud.git
+$ cd ruby-icloud
+$ bundle
+$ APPLE_ID="you@icloud.com" APPLE_PW="password" rake reminders
+
+Reminders for Adam Mckaig
+1. Disregard females
+2. Acquire currency
+3. Do laundry
+```
 
 ## Examples
 
