@@ -18,6 +18,10 @@ module ICloud
       end
     end
 
+    def user
+      @driver.user
+    end
+
     private
 
     def update!

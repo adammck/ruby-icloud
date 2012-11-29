@@ -7,14 +7,27 @@ require "json"
 
 module ICloud
   class Driver
-    def initialize user, pass, shard, client_id=nil
-      @user = user
+    def initialize apple_id, pass, shard, client_id=nil
+      @apple_id = apple_id
       @pass = pass
       @shard = shard
+
+      @user = nil
+      @services = nil
 
       @agent = nil
       @request_id = 1
       @client_id = client_id || UUIDTools::UUID.random_create.to_s.upcase
+    end
+
+    def user
+      ensure_logged_in
+      @user
+    end
+
+    def services
+      ensure_logged_in
+      @services
     end
 
     def todos_and_alarms
@@ -40,14 +53,22 @@ module ICloud
 
 
     # Public: Log in to icloud.com.
-    # Returns true if login was successful.
+    # Returns true if the login was successful.
     def login
-      agent.post\
+      response = agent.post\
         "https://setup.icloud.com/setup/ws/1/login",
-        { "apple_id"=>@user, "password"=>@pass, "extended_login"=>false }.to_json,
+        { "apple_id"=>@apple_id, "password"=>@pass, "extended_login"=>false }.to_json,
         headers
 
+      body = JSON.parse(response.body)
+      @user = DsInfo.from_icloud(body["dsInfo"])
+      @services = parse_services(body["webservices"])
+
       true
+    end
+
+    def login!
+      login or raise ICloud::LoginFailed
     end
 
     # Perform a GET request in this session.
@@ -70,20 +91,20 @@ module ICloud
     end
 
     def shard
-      "%02d" %[@shard]
+      "%02d" % [@shard]
     end
 
     def ensure_logged_in
-      login
+      login! if @user.nil?
     end
 
     def headers more={}
       {
         # Required:
-        "origin"=>"https://www.icloud.com",
+        "origin" => "https://www.icloud.com",
 
         # Optional:
-        "dnt"=>1
+        "dnt" => 1
 
       }.update(more)
     end
@@ -136,6 +157,18 @@ module ICloud
 
     def record_class name
       ICloud.const_defined?(name) ? ICloud.const_get(name) : nil
+    end
+
+    # Internal: Parse the "webservices" value returned during login into a hash
+    # of name=>url.
+    def parse_services(json)
+      Hash.new.tap do |hsh|
+        json.map do |name, params|
+          if params["status"] == "active"
+            hsh[name] = params["url"]
+          end
+        end
+      end
     end
   end
 end
