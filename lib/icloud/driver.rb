@@ -7,10 +7,9 @@ require "json"
 
 module ICloud
   class Driver
-    def initialize apple_id, pass, shard, client_id=nil
+    def initialize apple_id, pass, client_id=nil
       @apple_id = apple_id
       @pass = pass
-      @shard = shard
 
       @user = nil
       @services = nil
@@ -32,7 +31,7 @@ module ICloud
 
     def todos_and_alarms
       ensure_logged_in
-      records get "https://p#{shard}-calendarws.icloud.com/ca/todos"
+      records get @services["calendar"] + "/ca/todos"
     end
 
     def reminders
@@ -45,7 +44,7 @@ module ICloud
 
       begin
       post\
-        "https://p#{shard}-calendarws.icloud.com/ca/todos/%s/%s" % [todo.p_guid, todo.guid],
+        "#{@services["calendar"]}/ca/todos/%s/%s" % [todo.p_guid, todo.guid],
         { "ifMatch"=>todo.etag, "methodOverride"=>"PUT" },
         { "Todo"=>todo.to_icloud, "fullState"=>false }
       rescue StandardError => err
@@ -93,10 +92,6 @@ module ICloud
 
     def agent
       @agent ||= Mechanize.new
-    end
-
-    def shard
-      "%02d" % [@shard]
     end
 
     def ensure_logged_in

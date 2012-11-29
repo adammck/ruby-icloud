@@ -7,7 +7,7 @@ require "icloud"
 
 class TestDriver < MiniTest::Unit::TestCase
   def setup
-    @driver = ICloud::Driver.new ENV["APPLE_ID"], ENV["APPLE_PW"], ENV["APPLE_SHARD"], TEST_CLIENT_ID
+    @driver = ICloud::Driver.new ENV["APPLE_ID"], ENV["APPLE_PW"], TEST_CLIENT_ID
   end
 
   def test_can_log_in

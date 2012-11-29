@@ -32,7 +32,6 @@ following environment vars:
 ```
 APPLE_ID=
 APPLE_PW=
-APPLE_SHARD=
 ```
 
 And you'll need an Apple ID with the following reminders:

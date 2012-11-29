@@ -7,7 +7,7 @@ require "icloud"
 
 class TestSession < MiniTest::Unit::TestCase
   def setup
-    @session = ICloud::Session.new ENV["APPLE_ID"], ENV["APPLE_PW"], ENV["APPLE_SHARD"], TEST_CLIENT_ID
+    @session = ICloud::Session.new ENV["APPLE_ID"], ENV["APPLE_PW"], TEST_CLIENT_ID
   end
 
   def test_reminders

@@ -8,7 +8,7 @@ require "icloud"
 
 desc "Dump reminders"
 task :reminders do
-  session = ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"], ENV["APPLE_SHARD"])
+  session = ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"])
   puts "Incomplete reminders for #{session.user.full_name}"
   puts session.driver.reminders.map(&:title)
 end

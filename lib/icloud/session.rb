@@ -5,8 +5,8 @@ module ICloud
   class Session
     attr_reader :driver, :pool
 
-    def initialize user, pass, shard, client_id=nil
-      @driver = Driver.new(user, pass, shard, client_id)
+    def initialize user, pass, client_id=nil
+      @driver = Driver.new(user, pass, client_id)
       @pool = Pool.new
     end
 
