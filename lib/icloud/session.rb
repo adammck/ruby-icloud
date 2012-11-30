@@ -10,12 +10,9 @@ module ICloud
       @pool = Pool.new
     end
 
-    def reminders
+    def all_reminders
       update!
-
-      @pool.todos.map do |todo|
-        Reminder.new(self, todo.guid)
-      end
+      @pool.reminders
     end
 
     def user
@@ -25,10 +22,8 @@ module ICloud
     private
 
     def update!
-      @driver.todos_and_alarms.each do |type_name, records|
-        records.each do |record|
-          @pool.add record
-        end
+      (@driver.reminders + @driver.completed_reminders).each do |record|
+        @pool.add(record)
       end
     end
 

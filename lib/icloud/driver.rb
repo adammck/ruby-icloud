@@ -19,6 +19,22 @@ module ICloud
       @client_id = client_id || UUIDTools::UUID.random_create.to_s.upcase
     end
 
+    #
+    # Public: Logs in to icloud.com or raises some subclass of Net::HTTPError.
+    #
+    def login!
+      response = agent.post(
+        "https://setup.icloud.com/setup/ws/1/login",
+        { "apple_id"=>@apple_id, "password"=>@pass, "extended_login"=>false }.to_json,
+        default_headers)
+
+      body = JSON.parse(response.body)
+      @user = DsInfo.from_icloud(body["dsInfo"])
+      @services = parse_services(body["webservices"])
+
+      true
+    end
+
     def user
       ensure_logged_in
       @user
@@ -29,63 +45,29 @@ module ICloud
       @services
     end
 
-    def todos_and_alarms
-      ensure_logged_in
-      records get @services["calendar"] + "/ca/todos"
-    end
-
     def reminders
-      url = @services["reminders"] + "/rd/startup"
-      records(get(url))["Reminder"]
+      ensure_logged_in
+      response = get(service_url(:reminders, "/rd/startup"))
+      records(response)["Reminders"]
     end
 
-    def commit_todo todo
-      # params? startDate, endDate
-
-      begin
-      post\
-        "#{@services["calendar"]}/ca/todos/%s/%s" % [todo.p_guid, todo.guid],
-        { "ifMatch"=>todo.etag, "methodOverride"=>"PUT" },
-        { "Todo"=>todo.to_icloud, "fullState"=>false }
-      rescue StandardError => err
-        require "debugger"; debugger
-        puts nil
-      end
+    def completed_reminders
+      ensure_logged_in
+      response = get(service_url(:reminders, "/rd/completed"))
+      records(response)["Reminders"]
     end
 
-
-
-
-    # Public: Log in to icloud.com.
-    # Returns true if the login was successful.
-    def login
-      response = agent.post\
-        "https://setup.icloud.com/setup/ws/1/login",
-        { "apple_id"=>@apple_id, "password"=>@pass, "extended_login"=>false }.to_json,
-        headers
-
-      body = JSON.parse(response.body)
-      @user = DsInfo.from_icloud(body["dsInfo"])
-      @services = parse_services(body["webservices"])
-
-      true
+    # Performs a GET request in this session.
+    def get url, params={}, headers={}
+      response = agent.get(url, default_params.merge(params), nil, default_headers.merge(headers))
+      JSON.parse(response.body)
     end
 
-    def login!
-      login or raise ICloud::LoginFailed
-    end
-
-    # Perform a GET request in this session.
-    def get url, p={}, h={}
-      response = agent.get url, params(p), nil, headers(h)
-      JSON.parse response.body
-    end
-
-    # Perform a POST request in this session.
-    def post url, p={}, query={}, h={}
-      full_url = "%s?%s" % [url, Mechanize::Util.build_query_string(params(p))]
-      response = agent.post full_url, query.to_json, headers(h)
-      JSON.parse response.body
+    # Performs a POST request in this session.
+    def post url, params={}, postdata={}, headers={}
+      full_url = "%s?%s" % [url, Mechanize::Util.build_query_string(default_params.merge(params))]
+      response = agent.post(full_url, postdata.to_json, default_headers.merge(headers))
+      JSON.parse(response.body)
     end
 
     private
@@ -94,70 +76,68 @@ module ICloud
       @agent ||= Mechanize.new
     end
 
+    #
+    # Internal: Calls `login!` unless it has already been called.
+    #
     def ensure_logged_in
       login! if @user.nil?
     end
 
-    def headers more={}
+    def default_headers
       {
-        # Required:
-        "origin" => "https://www.icloud.com",
-
-        # Optional:
-        "dnt" => 1
-
-      }.update(more)
+        "origin" => "https://www.icloud.com"
+      }
     end
 
-    def params more={}
+    def default_params
       {
-        # Required:
         "lang" => "en-us",
         "usertz" => "America/New_York",
-        "dsid" => dsid,
-
-        # Optional:
-        "requestID" => request_id,
-        "clientID" => @client_id,
-        "clientVersion"=>  "3.1"
-
-      }.update(more)
+        "dsid" => @user.dsid
+      }
     end
 
-    # Extract the current DSID from the cookies.
-    def dsid
-      agent.cookie_jar.jar["icloud.com"]["/"]["X-APPLE-WEBAUTH-USER"].value.match(/d=(\d+)/)[1]
+    #
+    # Internal: Builds and returns an internal URL.
+    #
+    def service_url service, path
+      @services[service.to_s] + path
     end
 
-    def request_id
-      @request_id += 1
-    end
-
+    #
     # Internal: Replace the serialized records in an iCloud-ish with instances.
+    # unknown record types are ignored.
     #
     #   data - the data structure to be mangled.
     #
     # Examples
     #
-    #   records { "Alarm": [], "Todo": [{"guid": 123}]
+    #   records { "Alarm": [], "Todo": [{"guid": 123}] }
     #   # => { "Alarm": [], "Todo": [<Todo:0x123 @guid=123>]
     #
+    #   records { "Unknown": [{"guid": 123}] }
+    #   # => { }
+    #
     # Returns the hash of arrays of new objects.
+    #
     def records data
       Hash.new.tap do |hsh|
         data.each do |name, records|
-          name = name.gsub(/s$/, "")
-          cls = record_class(name)
 
-          hsh[name] = records.map do |hsh|
-            cls.from_icloud hsh
+          cls = record_class(name)
+          unless cls.nil?
+
+            hsh[name] = records.map do |hsh|
+              cls.from_icloud(hsh)
+            end
           end
         end
       end
     end
 
     def record_class name
-      ICloud.const_defined?(name) ? ICloud.const_get(name) : nil
+      singular = name.gsub(/s$/, "")
+      ICloud.const_defined?(singular) ? ICloud.const_get(singular) : nil
     end
 
     # Internal: Parse the "webservices" value returned during login into a hash
@@ -171,5 +151,6 @@ module ICloud
         end
       end
     end
+
   end
 end

@@ -10,10 +10,10 @@ class TestSession < MiniTest::Unit::TestCase
     @session = ICloud::Session.new ENV["APPLE_ID"], ENV["APPLE_PW"], TEST_CLIENT_ID
   end
 
-  def test_reminders
-    VCR.use_cassette "session/reminders" do
-      arr = @session.reminders
-      assert_equal 2, arr.length
+  def test_all_reminders
+    VCR.use_cassette "session/all_reminders" do
+      arr = @session.all_reminders
+      assert_equal 3, arr.length
     end
   end
 end

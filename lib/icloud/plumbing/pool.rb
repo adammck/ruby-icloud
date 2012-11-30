@@ -16,7 +16,7 @@ module ICloud
         obj.guid == guid
       end
     end
-    
+
     def find hsh
       @objects.select do |obj|
         hsh.all? do |k, v|
@@ -37,17 +37,17 @@ module ICloud
     def alarms
       find_by_type Alarm
     end
-    
+
     def collections
       find_by_type Collection
     end
-    
-    def todos
-      find_by_type Todo
+
+    def reminders
+      find_by_type Reminder
     end
-    
+
     private
-    
+
     def find_by_type cls
       @objects.select do |obj|
         obj.is_a? cls
