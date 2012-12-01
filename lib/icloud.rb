@@ -13,7 +13,6 @@ require "icloud/plumbing/collection"
 require "icloud/plumbing/dsinfo"
 require "icloud/plumbing/pool"
 require "icloud/plumbing/reminder"
-require "icloud/plumbing/todo"
 
 # Temporary?
 #require "icloud/porcelain/reminder"
