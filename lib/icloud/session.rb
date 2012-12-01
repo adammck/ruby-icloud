@@ -13,6 +13,7 @@ module ICloud
 
       @user = nil
       @services = nil
+      @pool = Pool.new
 
       @agent = nil
       @request_id = 1
@@ -46,20 +47,20 @@ module ICloud
     end
 
     def collections
-      get_startup["Collections"].map do |hsh|
-        Records::Collection.from_icloud(hsh)
-      end
+      update(get_startup)
+      @pool.find_by_type(Records::Collection)
     end
 
     def reminders
-      get_startup["Reminders"].map do |hsh|
-        Records::Reminder.from_icloud(hsh)
-      end
+      update(get_startup, get_completed)
+      @pool.find_by_type(Records::Reminder)
     end
 
-    def completed_reminders
-      get_completed["Reminders"].map do |hsh|
-        Records::Reminder.from_icloud(hsh)
+    def update(*args)
+      args.each do |hash|
+        parse_records(hash).each do |record|
+          @pool.add(record)
+        end
       end
     end
 
@@ -114,6 +115,15 @@ module ICloud
     end
 
     #
+    # Internal: Convert a record name (as returned by icloud.com) into a class.
+    # Names are downcased and singularized before being resolved.
+    #
+    def record_class(name, mod=ICloud::Records)
+      sym = name.capitalize.sub(/s$/, "").to_sym
+      mod.const_get(sym) if mod.const_defined?(sym)
+    end
+
+    #
     # Internal: Builds and returns an internal URL.
     #
     def service_url service, path
@@ -132,5 +142,32 @@ module ICloud
       end
     end
 
+    #
+    # Internal: Parses a nested hash of records (as passed around by icloud.com)
+    # into a flat array of record instances, silently ignoring any unrecognized
+    # data.
+    #
+    # Examples
+    #
+    #   parse_records({
+    #     "Collection": [{ "guid": 123 }, { "guid": 456 }],
+    #     "Reminder":   [{ "guid": 789 }],
+    #     "Whatever":   [{ "junk": 1 }]
+    #   })
+    #
+    #   # => [<Collection:123>, <Collection:456>, <Reminder:789>]
+    #
+    def parse_records(hash)
+      [].tap do |records|
+        hash.each do |name, hashes|
+          if cls = record_class(name)
+            hashes.each do |hsh|
+              obj = cls.from_icloud(hsh)
+              records.push(obj)
+            end
+          end
+        end
+      end
+    end
   end
 end

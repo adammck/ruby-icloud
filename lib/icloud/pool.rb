@@ -4,21 +4,19 @@
 module ICloud
   class Pool
     def initialize
-      @objects = []
+      @objects = {}
     end
 
     def add obj
-      @objects.push obj
+      @objects[obj.guid] = obj
     end
 
     def get guid
-      @objects.find do |obj|
-        obj.guid == guid
-      end
+      @objects[guid]
     end
 
     def find hsh
-      @objects.select do |obj|
+      @objects.values.select do |obj|
         hsh.all? do |k, v|
           obj.send(k) == v
         end
@@ -26,7 +24,7 @@ module ICloud
     end
 
     def changed
-      @objects.select do |obj|
+      @objects.values.select do |obj|
         obj.changed?
       end
     end
@@ -46,10 +44,8 @@ module ICloud
       find_by_type Reminder
     end
 
-    private
-
     def find_by_type cls
-      @objects.select do |obj|
+      @objects.values.select do |obj|
         obj.is_a? cls
       end
     end

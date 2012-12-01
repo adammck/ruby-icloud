@@ -23,17 +23,11 @@ class TestSession < MiniTest::Unit::TestCase
     end
   end
 
-  def test_can_fetch_incomplete_reminders
+  def test_can_fetch_all_reminders
     VCR.use_cassette "session/incomplete_reminders" do
       actual = @session.reminders.map(&:title)
-      assert_equal %w[One Three Two], actual.sort
-    end
-  end
-
-  def test_can_fetch_completed_reminders
-    VCR.use_cassette "session/completed_reminders" do
-      actual = @session.completed_reminders.map(&:title)
-      assert_equal %w[Bar Foo], actual.sort
+      expected = %w[Foo Bar One Two Three]
+      assert_equal expected.sort, actual.sort
     end
   end
 end
