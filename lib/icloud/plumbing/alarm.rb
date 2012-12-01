@@ -8,9 +8,10 @@ module ICloud
       :description,
       :guid,
       :is_location_based,
+      :measurement,
       :message_type,
       :on_date,
-      :p_guid
+      :proximity
     )
 
     def inspect
