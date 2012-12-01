@@ -29,7 +29,7 @@ module ICloud
         default_headers)
 
       body = JSON.parse(response.body)
-      @user = DsInfo.from_icloud(body["dsInfo"])
+      @user = Records::DsInfo.from_icloud(body["dsInfo"])
       @services = parse_services(body["webservices"])
 
       true
@@ -47,19 +47,19 @@ module ICloud
 
     def collections
       get_startup["Collections"].map do |hsh|
-        Collection.from_icloud(hsh)
+        Records::Collection.from_icloud(hsh)
       end
     end
 
     def reminders
       get_startup["Reminders"].map do |hsh|
-        Reminder.from_icloud(hsh)
+        Records::Reminder.from_icloud(hsh)
       end
     end
 
     def completed_reminders
       get_completed["Reminders"].map do |hsh|
-        Reminder.from_icloud(hsh)
+        Records::Reminder.from_icloud(hsh)
       end
     end
 
