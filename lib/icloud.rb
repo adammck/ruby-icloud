@@ -17,7 +17,6 @@ require "icloud/plumbing/reminder"
 # Temporary?
 #require "icloud/porcelain/reminder"
 
-require "icloud/driver"
 require "icloud/errors"
 require "icloud/session"
 require "icloud/version"
