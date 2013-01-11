@@ -1,33 +1,49 @@
 #!/usr/bin/env ruby
 # vim: et ts=2 sw=2
 
-require "minitest/autorun"
-require "icloud"
-
-
 class TestSession < MiniTest::Unit::TestCase
+  i_suck_and_my_tests_are_order_dependent!
+
+  def assert_equal_unordered(expected, actual)
+    assert_equal(expected.sort, actual.sort)
+  end
+
   def setup
-    @session = ICloud::Session.new ENV["APPLE_ID"], ENV["APPLE_PW"], TEST_CLIENT_ID
+    $session ||= ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"], TEST_CLIENT_ID)
   end
 
-  def test_can_log_in
-    VCR.use_cassette "session/login" do
-      assert @session.login!
+  def test_00_log_in
+    VCR.use_cassette "session/log_in" do
+      assert $session.login!
     end
   end
 
-  def test_can_fetch_collections
-    VCR.use_cassette "session/collections" do
-      actual = @session.collections.map(&:title)
-      assert_equal %w[Alpha Beta], actual.sort
+  def test_01_fetch_collections
+    VCR.use_cassette "session/fetch_collections" do
+      actual = $session.collections.map(&:title)
+      assert_equal_unordered %w[Alpha Beta], actual
     end
   end
 
-  def test_can_fetch_all_reminders
-    VCR.use_cassette "session/incomplete_reminders" do
-      actual = @session.reminders.map(&:title)
-      expected = %w[Foo Bar One Two Three]
-      assert_equal expected.sort, actual.sort
+  def test_02_fetch_all_reminders
+    VCR.use_cassette "session/can_fetch_all_reminders" do
+      actual = $session.reminders.map(&:title)
+      assert_equal_unordered %w[Foo Bar One Two Three], actual
+    end
+  end
+
+  def test_03_post_reminders
+    VCR.use_cassette "session/post_reminders" do
+      $session.post_reminder(ICloud::Records::Reminder.new.tap do |r|
+        r.title = TEST_REMINDER_TITLE
+      end)
+    end
+  end
+
+  def test_04_new_reminder_is_persisted
+    VCR.use_cassette "session/new_reminder_is_persisted" do
+      titles = $session.reminders.map(&:title)
+      assert_includes titles, TEST_REMINDER_TITLE
     end
   end
 end

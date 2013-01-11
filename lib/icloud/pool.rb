@@ -29,6 +29,10 @@ module ICloud
       end
     end
 
+    def delete(guid)
+      @objects.delete(guid)
+    end
+
 
 
 

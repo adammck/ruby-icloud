@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 # vim: et ts=2 sw=2
 
-require "uuidtools"
 require "mechanize"
 require "json"
 
@@ -17,7 +16,7 @@ module ICloud
 
       @agent = nil
       @request_id = 1
-      @client_id = client_id || UUIDTools::UUID.random_create.to_s.upcase
+      @client_id = client_id || ICloud.guid
     end
 
     #
@@ -33,6 +32,8 @@ module ICloud
       @user = Records::DsInfo.from_icloud(body["dsInfo"])
       @services = parse_services(body["webservices"])
 
+      update(get_startup)
+
       true
     end
 
@@ -47,13 +48,38 @@ module ICloud
     end
 
     def collections
-      update(get_startup)
+      ensure_logged_in
       @pool.find_by_type(Records::Collection)
     end
 
     def reminders
-      update(get_startup, get_completed)
+      ensure_logged_in
+      update(get_completed)
       @pool.find_by_type(Records::Reminder)
+    end
+
+    def post_reminder(reminder)
+      ensure_logged_in
+
+      # TODO: Should ClientState always be included in posts?
+      post(service_url(:reminders, "/rd/reminders/tasks"), {}, {
+        "Reminders" => reminder.to_icloud,
+        "ClientState" => client_state
+      })
+    end
+
+    def apply_changeset(cs)
+      if cs.include?("updates")
+        parse_records(cs["updates"]).each do |record|
+          @pool.add(record)
+        end
+      end
+
+      if cs.include?("deletes")
+        cs["delete"].each do |hash|
+          @pool.delete(hash["guid"])
+        end
+      end
     end
 
     def update(*args)
@@ -72,9 +98,20 @@ module ICloud
 
     # Performs a POST request in this session.
     def post url, params={}, postdata={}, headers={}
-      full_url = "%s?%s" % [url, Mechanize::Util.build_query_string(default_params.merge(params))]
-      response = agent.post(full_url, postdata.to_json, default_headers.merge(headers))
-      JSON.parse(response.body)
+      begin
+        full_url = "%s?%s" % [url, Mechanize::Util.build_query_string(default_params.merge(params))]
+        response = agent.post(full_url, postdata.to_json, default_headers.merge(headers))
+        r = JSON.parse(response.body)
+
+        # If this response contains a changeset, apply it.
+        if r.include?("ChangeSet")
+          apply_changeset(r["ChangeSet"])
+        end
+
+      rescue Mechanize::ResponseCodeError => err
+        hash = JSON.parse(err.page.body)
+        raise RequestError.new(hash["status"], hash["message"])
+      end
     end
 
     private
@@ -168,6 +205,25 @@ module ICloud
           end
         end
       end
+    end
+
+    #
+    # Returns the current client state, i.e. the `guid` and `ctag` (entity tag)
+    # of each collection we know about. The server uses this to decide which
+    # records to send back.
+    #
+    # It looks like multiple record types could be specified here, but haven't
+    # seen that.
+    #
+    def client_state
+      {
+        "Collections" => collections.map do |c|
+          {
+            "guid" => c.guid,
+            "ctag" => c.ctag,
+          }
+        end
+      }
     end
   end
 end
