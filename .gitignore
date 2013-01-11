@@ -1,6 +1,7 @@
 # adammck:
-secrets.rb
-test/fixtures/cassettes
+/test/fixtures/cassettes
+/vendor
+/bin
 
 # Bundler:
 *.gem
