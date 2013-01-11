@@ -7,7 +7,9 @@ require "vcr"
 TEST_CLIENT_ID = "61384E90-4A30-4F2A-89C3-E031E77B4B78"
 
 # Consistent for a single test run, otherwise unique.
-TEST_REMINDER_TITLE = "Test #{Time.now.to_i}"
+prefix = "Test #{Time.now.to_i}"
+TEST_TITLE_A = "#{prefix}A"
+TEST_TITLE_B = "#{prefix}B"
 
 VCR.configure do |c|
   here = File.dirname(__FILE__)

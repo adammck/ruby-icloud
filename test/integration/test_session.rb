@@ -8,6 +8,12 @@ class TestSession < MiniTest::Unit::TestCase
     assert_equal(expected.sort, actual.sort)
   end
 
+  def find(title)
+    $session.reminders.find do |reminder|
+      reminder.title == title
+    end
+  end
+
   def setup
     $session ||= ICloud::Session.new(ENV["APPLE_ID"], ENV["APPLE_PW"], TEST_CLIENT_ID)
   end
@@ -35,7 +41,7 @@ class TestSession < MiniTest::Unit::TestCase
   def test_03_post_reminders
     VCR.use_cassette "session/post_reminders" do
       $session.post_reminder(ICloud::Records::Reminder.new.tap do |r|
-        r.title = TEST_REMINDER_TITLE
+        r.title = TEST_TITLE_A
       end)
     end
   end
@@ -43,7 +49,22 @@ class TestSession < MiniTest::Unit::TestCase
   def test_04_new_reminder_is_persisted
     VCR.use_cassette "session/new_reminder_is_persisted" do
       titles = $session.reminders.map(&:title)
-      assert_includes titles, TEST_REMINDER_TITLE
+      assert_includes titles, TEST_TITLE_A
+    end
+  end
+
+  def test_05_update_a_reminder
+    VCR.use_cassette "session/update_a_reminder" do
+      reminder = find(TEST_TITLE_A)
+      reminder.title = TEST_TITLE_B
+      $session.post_reminder reminder
+    end
+  end
+
+  def test_06_updated_reminder_is_persisted
+    VCR.use_cassette "session/new_reminder_is_persisted" do
+      titles = $session.reminders.map(&:title)
+      assert_includes titles, TEST_TITLE_B
     end
   end
 end
