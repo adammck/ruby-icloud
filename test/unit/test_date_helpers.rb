@@ -1,10 +1,7 @@
 #!/usr/bin/env ruby
 # vim: et ts=2 sw=2
 
-require "minitest/autorun"
-require "icloud"
 require "date"
-
 
 class TestDateHelpers < MiniTest::Unit::TestCase
   def setup

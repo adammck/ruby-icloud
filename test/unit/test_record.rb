@@ -1,10 +1,6 @@
 #!/usr/bin/env ruby
 # vim: et ts=2 sw=2
 
-require "minitest/autorun"
-require "icloud"
-
-
 class TestRecord < MiniTest::Unit::TestCase
   def setup
     @cls = Class.new do
