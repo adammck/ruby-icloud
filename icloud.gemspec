@@ -11,12 +11,9 @@ Gem::Specification.new do |gem|
   gem.email         = ["adam.mckaig@gmail.com"]
   gem.summary       = %q{Ruby library to read/write to Apple's iCloud}
   gem.homepage      = "https://github.com/adammck/ruby-icloud"
-  
+
   gem.add_dependency "mechanize"
   gem.add_dependency "uuidtools"
-
-  gem.add_development_dependency "webmock"
-  gem.add_development_dependency "vcr"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
