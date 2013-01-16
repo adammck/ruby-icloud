@@ -6,7 +6,5 @@ gemspec
 
 group :test do
   gem "minitest"
-  gem "webmock"
-  gem "vcr"
   gem "turn"
 end
