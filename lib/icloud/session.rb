@@ -68,6 +68,15 @@ module ICloud
       })
     end
 
+    def delete_reminder(reminder)
+      ensure_logged_in
+
+      post(service_url(:reminders, "/rd/reminders/tasks"), { :methodOverride => "DELETE", :id => deletion_id }, {
+        "Reminders" => [reminder.to_icloud],
+        "ClientState" => client_state
+      })
+    end
+
     def apply_changeset(cs)
       if cs.include?("updates")
         parse_records(cs["updates"]).each do |record|
@@ -76,7 +85,7 @@ module ICloud
       end
 
       if cs.include?("deletes")
-        cs["delete"].each do |hash|
+        cs["deletes"].each do |hash|
           @pool.delete(hash["guid"])
         end
       end
@@ -224,6 +233,15 @@ module ICloud
           }
         end
       }
+    end
+
+    #
+    # Internal: Returns a random 40 character hex string, which icloud.com needs
+    # when deleting a reminder. (I don't know why. It doesn't appear to be used
+    # anywhere else.)
+    #
+    def deletion_id
+      SecureRandom.hex(20)
     end
   end
 end

@@ -67,4 +67,18 @@ class TestSession < MiniTest::Unit::TestCase
       assert_includes titles, TEST_TITLE_B
     end
   end
+
+  def test_07_delete_a_reminder
+    VCR.use_cassette "session/delete_a_reminder" do
+      reminder = find(TEST_TITLE_B)
+      $session.delete_reminder reminder
+    end
+  end
+
+  def test_08_deleted_reminder_is_persisted
+    VCR.use_cassette "session/deleted_reminder_is_persisted" do
+      titles = $session.reminders.map(&:title)
+      refute_includes titles, TEST_TITLE_B
+    end
+  end
 end
