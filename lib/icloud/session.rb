@@ -6,6 +6,8 @@ require "json"
 
 module ICloud
   class Session
+    include Proxy
+
     def initialize apple_id, pass, client_id=nil
       @apple_id = apple_id
       @pass = pass
@@ -136,7 +138,9 @@ module ICloud
     end
 
     def agent
-      @agent ||= Mechanize.new
+      @agent ||= Mechanize.new do |agent|
+        agent.set_proxy(proxy.host, proxy.port, proxy.user, proxy.password)
+      end
     end
 
     #

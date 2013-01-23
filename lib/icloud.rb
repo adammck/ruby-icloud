@@ -7,6 +7,7 @@ end
 require "icloud/helpers/date_helpers"
 require "icloud/helpers/guid"
 require "icloud/helpers/inflections"
+require "icloud/helpers/proxy"
 
 require "icloud/record"
 require "icloud/records/alarm"
