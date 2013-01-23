@@ -85,12 +85,12 @@ don't have a better solution right now.
 
 ## License
 
-[rb-icloud-reminders] [repo] is free software, available under [the MIT license]
+[ruby-icloud] [repo] is free software, available under [the MIT license]
 [license].
 
 
 
 
-[repo]:    https://github.com/adammck/gh-news-feed-filters
-[license]: https://raw.github.com/adammck/gh-news-feed-filters/master/LICENSE
+[repo]:    https://github.com/adammck/ruby-icloud
+[license]: https://raw.github.com/adammck/ruby-icloud/master/LICENSE
 [appleid]: https://appleid.apple.com
