@@ -1,6 +1,5 @@
 # adammck:
 /vendor
-/bin
 
 # Bundler:
 *.gem
