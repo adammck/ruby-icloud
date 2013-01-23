@@ -15,8 +15,7 @@ require "icloud/records/collection"
 require "icloud/records/dsinfo"
 require "icloud/records/reminder"
 
-# Temporary?
-#require "icloud/porcelain/reminder"
+require "icloud/porcelain/reminder"
 
 require "icloud/errors"
 require "icloud/pool"
