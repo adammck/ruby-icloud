@@ -11,9 +11,9 @@ unless id && pw
 end
 
 ICloud::Session.new(id, pw).tap do |session|
-  puts "Reminders for #{session.user.full_name}"
+  puts "Reminders for #{session.user.full_name}:"
 
-  session.reminders.each_with_index do |reminder, i|
-    puts "#{i+1}. #{reminder.title}"
+  session.reminders.reject(&:completed_date).each_with_index do |reminder, i|
+    puts sprintf("%02d. %s", (i+1), reminder.title)
   end
 end
