@@ -83,6 +83,15 @@ grandmother's life support, and so on. I'm aware this this is absurd, but I
 don't have a better solution right now.
 
 
+## Compatibility
+
+This gem is [tested against] [travis]:
+
+* Ruby 1.8.7
+* Ruby 1.9.2
+* Ruby 1.9.3
+
+
 ## License
 
 [ruby-icloud] [repo] is free software, available under [the MIT license]
@@ -94,3 +103,4 @@ don't have a better solution right now.
 [repo]:    https://github.com/adammck/ruby-icloud
 [license]: https://raw.github.com/adammck/ruby-icloud/master/LICENSE
 [appleid]: https://appleid.apple.com
+[travis]:  http://travis-ci.org/adammck/ruby-icloud
