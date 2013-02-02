@@ -12,6 +12,7 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{Ruby library to read/write to Apple's iCloud}
   gem.homepage      = "https://github.com/adammck/ruby-icloud"
 
+  gem.add_dependency "json"
   gem.add_dependency "mechanize"
   gem.add_dependency "uuidtools"
 

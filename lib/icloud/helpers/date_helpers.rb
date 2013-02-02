@@ -16,10 +16,10 @@ module ICloud
       dt.strftime("%Y%m%d").to_i,
 
       # The usual date+time fields. Note that there's no seconds.
-      dt.year, dt.month, dt.mday, dt.hour, dt.minute,
+      dt.year, dt.month, dt.mday, dt.hour, dt.min,
 
       # Minutes since midnight.
-      (dt.hour * 60) + dt.minute
+      (dt.hour * 60) + dt.min
     ]
   end
 end
