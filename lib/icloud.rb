@@ -4,6 +4,9 @@
 module ICloud
 end
 
+require "icloud/core_ext/array"
+require "icloud/core_ext/object"
+
 require "icloud/helpers/date_helpers"
 require "icloud/helpers/guid"
 require "icloud/helpers/inflections"

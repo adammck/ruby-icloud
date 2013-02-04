@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # vim: et ts=2 sw=2
 
-class TestRecord < MiniTest::Unit::TestCase
+class TestSimpleRecord < MiniTest::Unit::TestCase
   def setup
     @cls = Class.new do
       include ICloud::Record

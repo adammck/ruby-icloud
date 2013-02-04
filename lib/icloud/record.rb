@@ -33,7 +33,7 @@ module ICloud
     def to_icloud
       Hash.new.tap do |hsh|
         dump.each do |name, val|
-          hsh[ICloud.camel_case(name)] = val
+          hsh[ICloud.camel_case(name)] = val.to_icloud
         end
       end
     end
