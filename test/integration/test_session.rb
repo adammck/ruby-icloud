@@ -32,18 +32,18 @@ class TestSession < MiniTest::Unit::TestCase
     assert_equal_unordered %w[Foo Bar One Two Three], actual
   end
 
-  def test_03_post_reminders
+  def test_03_create_reminder
     $session.post_reminder(ICloud::Records::Reminder.new.tap do |r|
       r.title = TEST_TITLE_A
     end)
   end
 
-  def test_04_new_reminder_is_persisted
+  def test_04_created_reminder_is_persisted
     titles = $session.reminders.map(&:title)
     assert_includes titles, TEST_TITLE_A
   end
 
-  def test_05_update_a_reminder
+  def test_05_update_reminder
     reminder = find(TEST_TITLE_A)
     reminder.title = TEST_TITLE_B
     $session.post_reminder reminder
@@ -54,7 +54,7 @@ class TestSession < MiniTest::Unit::TestCase
     assert_includes titles, TEST_TITLE_B
   end
 
-  def test_07_delete_a_reminder
+  def test_07_delete_reminder
     reminder = find(TEST_TITLE_B)
     $session.delete_reminder reminder
   end
@@ -62,5 +62,20 @@ class TestSession < MiniTest::Unit::TestCase
   def test_08_deleted_reminder_is_persisted
     titles = $session.reminders.map(&:title)
     refute_includes titles, TEST_TITLE_B
+  end
+
+  def test_09_create_reminder_with_alarm
+    $session.post_reminder(ICloud::Records::Reminder.new.tap do |r|
+      r.title = TEST_TITLE_A
+      r.alarms = ICloud::Records::Alarm.new.tap do |a|
+        a.on_date = TEST_DATE
+      end
+    end)
+  end
+
+  def test_10_created_reminder_with_alarm_is_persisted
+    reminder = find(TEST_TITLE_A)
+    dates = reminder.alarms.map(&:on_date)
+    assert_equal [TEST_DATE], dates
   end
 end
