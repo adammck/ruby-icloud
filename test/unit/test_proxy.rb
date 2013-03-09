@@ -10,14 +10,9 @@ class TestProxy < MiniTest::Unit::TestCase
     @obj = @cls.new
   end
 
-  def test_returns_null_uri_when_no_proxy_is_configured
+  def test_returns_nil_when_no_proxy_is_configured
     @obj.stub(:env, { }) do
-      @obj.proxy.tap do |uri|
-        assert_nil uri.host
-        assert_nil uri.port
-        assert_nil uri.user
-        assert_nil uri.password
-      end
+      assert_nil @obj.proxy
     end
   end
 

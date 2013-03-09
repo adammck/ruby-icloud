@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 # vim: et ts=2 sw=2
 
-require "mechanize"
+require "cgi"
+require "uri"
+require "net/https"
 require "json/pure"
 
 module ICloud
@@ -16,7 +18,9 @@ module ICloud
       @services = nil
       @pool = Pool.new
 
-      @agent = nil
+      @http = {}
+      @cookies = []
+
       @request_id = 1
       @client_id = client_id || ICloud.guid
     end
@@ -25,12 +29,13 @@ module ICloud
     # Public: Logs in to icloud.com or raises some subclass of Net::HTTPError.
     #
     def login!
-      response = agent.post(
-        "https://setup.icloud.com/setup/ws/1/login",
-        { "apple_id"=>@apple_id, "password"=>@pass, "extended_login"=>false }.to_json,
-        default_headers)
+      uri = URI.parse("https://setup.icloud.com/setup/ws/1/login")
+      payload = { "apple_id"=>@apple_id, "password"=>@pass, "extended_login"=>false }
 
+      response = http(uri.host, uri.port).post(uri.path, payload.to_json, default_headers)
+      @cookies = response.get_fields("set-cookie")
       body = JSON.parse(response.body)
+
       @user = Records::DsInfo.from_icloud(body["dsInfo"])
       @services = parse_services(body["webservices"])
 
@@ -73,7 +78,7 @@ module ICloud
     def delete_reminder(reminder)
       ensure_logged_in
 
-      post(service_url(:reminders, "/rd/reminders/tasks"), { :methodOverride => "DELETE", :id => deletion_id }, {
+      post(service_url(:reminders, "/rd/reminders/tasks"), { "methodOverride" => "DELETE", "id" => deletion_id }, {
         "Reminders" => [reminder.to_icloud],
         "ClientState" => client_state
       })
@@ -103,26 +108,29 @@ module ICloud
 
     # Performs a GET request in this session.
     def get url, params={}, headers={}
-      response = agent.get(url, default_params.merge(params), nil, default_headers.merge(headers))
+      uri = URI.parse(url)
+      path = uri.path + "?" + query_string(default_params.merge(params))
+      response = http(uri.host, uri.port).get(path, default_headers.merge(headers))
       JSON.parse(response.body)
     end
 
     # Performs a POST request in this session.
     def post url, params={}, postdata={}, headers={}
-      begin
-        full_url = "%s?%s" % [url, Mechanize::Util.build_query_string(default_params.merge(params))]
-        response = agent.post(full_url, postdata.to_json, default_headers.merge(headers))
-        r = JSON.parse(response.body)
+      uri = URI.parse(url)
+      path = uri.path + "?" + query_string(default_params.merge(params))
+      response = http(uri.host, uri.port).post(path, postdata.to_json, default_headers.merge(headers))
+      hash = JSON.parse(response.body)
 
-        # If this response contains a changeset, apply it.
-        if r.include?("ChangeSet")
-          apply_changeset(r["ChangeSet"])
-        end
-
-      rescue Mechanize::ResponseCodeError => err
-        hash = JSON.parse(err.page.body)
+      if response.code.to_i != 200
         raise RequestError.new(hash["status"], hash["message"])
       end
+
+      # If this response contains a changeset, apply it.
+      if hash.include?("ChangeSet")
+        apply_changeset(hash["ChangeSet"])
+      end
+
+      hash
     end
 
     private
@@ -137,10 +145,36 @@ module ICloud
       get(service_url(:reminders, "/rd/completed"))
     end
 
-    def agent
-      @agent ||= Mechanize.new do |agent|
-        agent.set_proxy(proxy.host, proxy.port, proxy.user, proxy.password)
+    #
+    # Internal: Returns a Net::HTTP object for host:post, which may or may not
+    # have already been used. Proxies and SSL are taken care of.
+    #
+    def http(host, port)
+      @http["#{host}:#{port}"] ||= http_class.new(host, port).tap do |http|
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+        http.use_ssl = true
       end
+    end
+
+    #
+    # Internal: Returns the Net::HTTP class which should be used, which might be
+    # a configured Proxy.
+    #
+    def http_class
+      if use_proxy?
+        Net::HTTP::Proxy(proxy.host, proxy.port, proxy.user, proxy.password)
+      else
+        Net::HTTP
+      end
+    end
+
+    #
+    # Internal: Flattens a hash into a query string.
+    #
+    def query_string(params)
+      params.map do |k, v|
+        "#{CGI::escape(k)}=#{CGI::escape(v)}"
+      end.join("&")
     end
 
     #
@@ -152,7 +186,8 @@ module ICloud
 
     def default_headers
       {
-        "origin" => "https://www.icloud.com"
+        "origin" => "https://www.icloud.com",
+        "cookie" => @cookies.join("; ")
       }
     end
 

@@ -6,15 +6,21 @@ module ICloud
 
     #
     # Public: Returns a URI containing the current proxy server, as set by the
-    # environment. If no proxy is set, the URI will be null, e.g. it will return
-    # `nil` for every method.
+    # environment, or nil if no proxy is set.
     #
     def proxy
       if proxies.any?
         URI(proxies.first)
       else
-        null_proxy
+        nil
       end
+    end
+
+    #
+    # Public: Returns true if a proxy should be used.
+    #
+    def use_proxy?
+      !! proxy
     end
 
     #
@@ -26,13 +32,6 @@ module ICloud
       %w[HTTPS_PROXY https_proxy HTTP_PROXY http_proxy].map do |key|
         env[key]
       end.compact
-    end
-
-    #
-    # Internal: Returns a URI which returns `nil` for everything.
-    #
-    def null_proxy
-      URI::Generic.build(Hash.new)
     end
 
     #

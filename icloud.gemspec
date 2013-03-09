@@ -13,7 +13,6 @@ Gem::Specification.new do |gem|
   gem.homepage      = "https://github.com/adammck/ruby-icloud"
 
   gem.add_dependency "json_pure"
-  gem.add_dependency "mechanize"
   gem.add_dependency "uuidtools"
 
   gem.files         = `git ls-files`.split($\)
