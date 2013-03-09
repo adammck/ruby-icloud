@@ -2,7 +2,7 @@
 # vim: et ts=2 sw=2
 
 require "mechanize"
-require "json"
+require "json/pure"
 
 module ICloud
   class Session
