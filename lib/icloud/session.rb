@@ -69,7 +69,17 @@ module ICloud
       ensure_logged_in
 
       # TODO: Should ClientState always be included in posts?
-      post(service_url(:reminders, "/rd/reminders/tasks"), {}, {
+      post(service_url(:reminders, "/rd/reminders/tasks"), { }, {
+        "Reminders" => reminder.to_icloud,
+        "ClientState" => client_state
+      })
+    end
+
+    def put_reminder(reminder)
+      ensure_logged_in
+
+      # TODO: Should ClientState always be included in posts?
+      post(service_url(:reminders, "/rd/reminders/tasks"), { "methodOverride" => "PUT" }, {
         "Reminders" => reminder.to_icloud,
         "ClientState" => client_state
       })
@@ -117,12 +127,26 @@ module ICloud
     # Performs a POST request in this session.
     def post url, params={}, postdata={}, headers={}
       uri = URI.parse(url)
+      p = postdata.to_json
+      h = default_headers.merge(headers)
       path = uri.path + "?" + query_string(default_params.merge(params))
-      response = http(uri.host, uri.port).post(path, postdata.to_json, default_headers.merge(headers))
-      hash = JSON.parse(response.body)
+      response = http(uri.host, uri.port).post(path, p, h)
 
-      if response.code.to_i != 200
-        raise RequestError.new(hash["status"], hash["message"])
+      if (response.code.to_i) == 200 && (response.content_type == "text/json")
+        hash = JSON.parse(response.body)
+
+      else
+        raise StandardError.new(
+          "Request:\n"                               +
+          "path: #{path}\n"                          +
+          "headers: #{h}\n"                          +
+          "#{p}\n"                                   +
+          "Response:\n"                              +
+          "--\n"                                     +
+          "Response:\n"                              +
+          "status: #{response.code}\n"               +
+          "content-type: #{response.content_type}\n" +
+          response.body)
       end
 
       # If this response contains a changeset, apply it.

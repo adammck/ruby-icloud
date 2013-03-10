@@ -3,6 +3,10 @@
 
 module ICloud
   module Records
+    #
+    # Note: Alarms can only be added to existing reminders. Reminders cannot be
+    # created with alarms.
+    #
     class Alarm
       include Record
       has_fields(
@@ -12,8 +16,26 @@ module ICloud
         :measurement,
         :message_type,
         :on_date,
-        :proximity
+        :proximity,
+        :structured_location
       )
+
+      def self.on_date_from_icloud(value)
+        ICloud.date_from_icloud(value)
+      end
+
+      # TODO: Move this up to Record?
+      def guid
+        @guid ||= ICloud.guid
+      end
+
+      #
+      # Note: Message type MUST be specified, or the service will return a very
+      # unhelpful internal server error.
+      #
+      def message_type
+        @message_type ||= "message"
+      end
 
       def inspect
         "#<Alarm %p date=%p>" % [

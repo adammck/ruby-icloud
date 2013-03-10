@@ -30,6 +30,18 @@ module ICloud
         @alarms = []
       end
 
+      # When alarms are added to this reminder, wrap them in Alarm objects.
+      # TODO: Replace this with a cast method.
+      def alarms=(alarms)
+        @alarms = alarms.map do |alarm|
+          if alarm.is_a?(Hash)
+            Alarm.from_icloud(alarm)
+          else
+            alarm
+          end
+        end
+      end
+
       # If this reminder doesn't already have a guid (i.e. it hasn't been
       # persisted) yet, generate one the first time it's read.
       def guid

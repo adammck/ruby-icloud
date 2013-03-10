@@ -109,7 +109,10 @@ module ICloud
       def from_icloud hsh
         self.new.tap do |record|
           fields.each do |name|
-            record.send "#{name}=", hsh[ICloud.camel_case(name)]
+            value = hsh[ICloud.camel_case(name)]
+            cast_method = "#{name}_from_icloud"
+            native_value = respond_to?(cast_method) ? send(cast_method, value) : value
+            record.send "#{name}=", native_value
           end
 
           record.snapshot!
