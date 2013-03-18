@@ -4,33 +4,18 @@ This is a Ruby library to access iCloud reminders.
 
 ## Try it
 
-```
-$ git clone https://github.com/adammck/ruby-icloud.git
-$ cd ruby-icloud
-$ bundle --path=vendor
-$ APPLE_ID="you@icloud.com" APPLE_PW="password" bundle exec bin/icloud-reminders
-
-Reminders for Adam Mckaig
-1. Disregard females
-2. Acquire currency
-3. Do laundry
+```sh
+git clone https://github.com/adammck/ruby-icloud.git
+cd ruby-icloud
+bundle --path=vendor
+bundle exec irb -r icloud
 ```
 
-## Examples
-
-```ruby
-# Dump all incomplete reminders.
-puts Reminders.select do |r|
-  not r.completed?
-end
-```
-
-```ruby
-# Create a new reminder.
-Reminders.create "Feed the dog",
-  :notes => "If you don't, it will starve to death.",
-  :at => DateTime.parse("5:30 PM"),
-  :repeat => :daily
+```irb
+irb(main):001:0> session = ICloud::Session.new("you@icloud.com", "passw0rd")
+=> #<ICloud::Session:0x10637e040>
+irb(main):002:0> session.reminders.first(3).map(:title)
+=> ["Disregard females", "Acquire currency", "Do laundry"]
 ```
 
 
