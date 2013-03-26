@@ -20,8 +20,13 @@ module ICloud
         :structured_location
       )
 
+      #
+      # Internal: Cast `value` to a DateTime (for the `on_date` field).
+      #
       def self.on_date_from_icloud(value)
-        ICloud.date_from_icloud(value)
+        unless value.nil?
+          ICloud.date_from_icloud(value)
+        end
       end
 
       # TODO: Move this up to Record?
