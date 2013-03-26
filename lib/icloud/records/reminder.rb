@@ -30,6 +30,13 @@ module ICloud
         @alarms = []
       end
 
+      #
+      # Public: Returns true if this reminder has been marked as complete.
+      #
+      def complete?
+        !! completed_date
+      end
+
       # When alarms are added to this reminder, wrap them in Alarm objects.
       # TODO: Replace this with a cast method.
       def alarms=(alarms)
