@@ -22,7 +22,7 @@ module ICloud
       @cookies = []
 
       @request_id = 1
-      @client_id = client_id || ICloud.guid
+      @client_id = client_id || default_client_id
     end
 
     #
@@ -305,6 +305,14 @@ module ICloud
     #
     def deletion_id
       SecureRandom.hex(20)
+    end
+
+    #
+    # Internal: Returns the default client UUID of this library. It's totally
+    # arbitrary. Please change if it you substantially fork the library.
+    #
+    def default_client_id
+      "1B47512E-9743-11E2-8092-7F654762BE04"
     end
   end
 end
