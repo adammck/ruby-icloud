@@ -42,7 +42,7 @@ module ICloud
     # Returns the serialized hash.
     def dump
       Hash.new.tap do |hsh|
-        self.class.fields.each do |name|
+        self.class.fields.each do |name, has_many_type|
           hsh[name] = send name
         end
       end
@@ -58,6 +58,11 @@ module ICloud
     # called, or if snapshot has never been called.
     def changed?
       @snapshot.nil? or (@snapshot != dump)
+    end
+
+    # Public: Returns true if this record is equal-ish to `other`.
+    def ==(other)
+      other.respond_to?(:to_icloud) && (dump == other.to_icloud)
     end
 
 
@@ -76,12 +81,21 @@ module ICloud
       #
       # Returns nothing.
       def has_fields *names
-        @fields ||= []
-
-        names.map(&:to_s).each do |name|
-          attr_accessor name
-          @fields.push name
+        names.each do |name|
+          has_field name
         end
+      end
+
+      # TODO: Documentation
+      def has_many name, cls
+        has_field name, cls
+      end
+
+      # TODO: Documentation
+      def has_field name, cls=nil
+        @fields ||= []
+        @fields.push [name.to_s, cls]
+        attr_accessor name
       end
 
       # Public: Create a record from an iCloud-ish (camelCased) hash. To ensure
@@ -108,10 +122,19 @@ module ICloud
       # Returns the new record.
       def from_icloud hsh
         self.new.tap do |record|
-          fields.each do |name|
+
+          fields.each do |name, cls|
             value = hsh[ICloud.camel_case(name)]
-            cast_method = "#{name}_from_icloud"
-            native_value = respond_to?(cast_method) ? send(cast_method, value) : value
+
+            native_value = if cls
+              value.map do |v|
+                cls.from_icloud(v)
+              end
+            else
+              cast_method = "#{name}_from_icloud"
+              respond_to?(cast_method) ? send(cast_method, value) : value
+            end
+
             record.send "#{name}=", native_value
           end
 
