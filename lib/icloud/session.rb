@@ -3,6 +3,7 @@
 
 require "cgi"
 require "uri"
+require "digest/sha1"
 require "net/https"
 require "json/pure"
 
@@ -13,16 +14,18 @@ module ICloud
     def initialize apple_id, pass, client_id=nil
       @apple_id = apple_id
       @pass = pass
-
-      @user = nil
-      @services = nil
-      @pool = Pool.new
+      @client_id = client_id || default_client_id
 
       @http = {}
       @cookies = []
 
-      @request_id = 1
-      @client_id = client_id || default_client_id
+      @user = nil
+      @services = nil
+
+      # This appears to be a magic token which is given at login, which must be
+      # passed back (as a sha1 hash along with the apple_id) with some requests.
+      # The reminders app doesn't seem to care, but (at least) contacts does.
+      @instance = nil
     end
 
     #
@@ -38,8 +41,7 @@ module ICloud
 
       @user = Records::DsInfo.from_icloud(body["dsInfo"])
       @services = parse_services(body["webservices"])
-
-      update(get_startup)
+      @instance = body["instance"]
 
       true
     end
@@ -54,72 +56,17 @@ module ICloud
       @services
     end
 
-    def collections
-      ensure_logged_in
-      @pool.find_by_type(Records::Collection)
-    end
-
-    def reminders
-      ensure_logged_in
-      update(get_completed)
-      @pool.find_by_type(Records::Reminder)
-    end
-
-    def post_reminder(reminder)
-      ensure_logged_in
-
-      # TODO: Should ClientState always be included in posts?
-      post(service_url(:reminders, "/rd/reminders/tasks"), { }, {
-        "Reminders" => reminder.to_icloud,
-        "ClientState" => client_state
-      })
-    end
-
-    def put_reminder(reminder)
-      ensure_logged_in
-
-      # TODO: Should ClientState always be included in posts?
-      post(service_url(:reminders, "/rd/reminders/tasks"), { "methodOverride" => "PUT" }, {
-        "Reminders" => reminder.to_icloud,
-        "ClientState" => client_state
-      })
-    end
-
-    def delete_reminder(reminder)
-      ensure_logged_in
-
-      post(service_url(:reminders, "/rd/reminders/tasks"), { "methodOverride" => "DELETE", "id" => deletion_id }, {
-        "Reminders" => [reminder.to_icloud],
-        "ClientState" => client_state
-      })
-    end
-
-    def apply_changeset(cs)
-      if cs.include?("updates")
-        parse_records(cs["updates"]).each do |record|
-          @pool.add(record)
-        end
-      end
-
-      if cs.include?("deletes")
-        cs["deletes"].each do |hash|
-          @pool.delete(hash["guid"])
-        end
-      end
-    end
-
-    def update(*args)
-      args.each do |hash|
-        parse_records(hash).each do |record|
-          @pool.add(record)
-        end
-      end
-    end
-
     # Performs a GET request in this session.
     def get url, params={}, headers={}
       uri = URI.parse(url)
       path = uri.path + "?" + query_string(default_params.merge(params))
+
+      # puts
+      # puts "GET"
+      # puts path
+      # puts default_headers.merge(headers)
+      # puts
+
       response = http(uri.host, uri.port).get(path, default_headers.merge(headers))
       JSON.parse(response.body)
     end
@@ -149,24 +96,7 @@ module ICloud
           response.body)
       end
 
-      # If this response contains a changeset, apply it.
-      if hash.include?("ChangeSet")
-        apply_changeset(hash["ChangeSet"])
-      end
-
       hash
-    end
-
-    private
-
-    def get_startup
-      ensure_logged_in
-      get(service_url(:reminders, "/rd/startup"))
-    end
-
-    def get_completed
-      ensure_logged_in
-      get(service_url(:reminders, "/rd/completed"))
     end
 
     #
@@ -218,18 +148,11 @@ module ICloud
     def default_params
       {
         "lang" => "en-us",
+        "locale" => "en_US",
         "usertz" => "America/New_York",
-        "dsid" => @user.dsid
+        "dsid" => @user.dsid,
+        "id" => token
       }
-    end
-
-    #
-    # Internal: Convert a record name (as returned by icloud.com) into a class.
-    # Names are downcased and singularized before being resolved.
-    #
-    def record_class(name, mod=ICloud::Records)
-      sym = name.capitalize.sub(/s$/, "").to_sym
-      mod.const_get(sym) if mod.const_defined?(sym)
     end
 
     #
@@ -252,67 +175,20 @@ module ICloud
     end
 
     #
-    # Internal: Parses a nested hash of records (as passed around by icloud.com)
-    # into a flat array of record instances, silently ignoring any unrecognized
-    # data.
-    #
-    # Examples
-    #
-    #   parse_records({
-    #     "Collection": [{ "guid": 123 }, { "guid": 456 }],
-    #     "Reminder":   [{ "guid": 789 }],
-    #     "Whatever":   [{ "junk": 1 }]
-    #   })
-    #
-    #   # => [<Collection:123>, <Collection:456>, <Reminder:789>]
-    #
-    def parse_records(hash)
-      [].tap do |records|
-        hash.each do |name, hashes|
-          if cls = record_class(name)
-            hashes.each do |hsh|
-              obj = cls.from_icloud(hsh)
-              records.push(obj)
-            end
-          end
-        end
-      end
-    end
-
-    #
-    # Returns the current client state, i.e. the `guid` and `ctag` (entity tag)
-    # of each collection we know about. The server uses this to decide which
-    # records to send back.
-    #
-    # It looks like multiple record types could be specified here, but haven't
-    # seen that.
-    #
-    def client_state
-      {
-        "Collections" => collections.map do |c|
-          {
-            "guid" => c.guid,
-            "ctag" => c.ctag,
-          }
-        end
-      }
-    end
-
-    #
-    # Internal: Returns a random 40 character hex string, which icloud.com needs
-    # when deleting a reminder. (I don't know why. It doesn't appear to be used
-    # anywhere else.)
-    #
-    def deletion_id
-      SecureRandom.hex(20)
-    end
-
-    #
     # Internal: Returns the default client UUID of this library. It's totally
     # arbitrary. Please change if it you substantially fork the library.
     #
     def default_client_id
       "1B47512E-9743-11E2-8092-7F654762BE04"
+    end
+
+    #
+    # Internal: Returns a magic hash derived from the current `@instance` and
+    # `@apple_id`. I'm not sure exactly what this is for, right now. Some app
+    # requests won't work without it.
+    #
+    def token
+      Digest::SHA1.hexdigest(@apple_id + @instance).upcase
     end
   end
 end

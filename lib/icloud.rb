@@ -14,10 +14,9 @@ require "icloud/helpers/inflections"
 require "icloud/helpers/proxy"
 
 require "icloud/record"
-require "icloud/records/alarm"
-require "icloud/records/collection"
 require "icloud/records/dsinfo"
-require "icloud/records/reminder"
+
+require "icloud/apps/reminders"
 
 require "icloud/porcelain/reminder"
 
