@@ -85,6 +85,15 @@ module ICloud
       })
     end
 
+    def put_collection_reminder(reminder)
+      ensure_logged_in
+
+      post(service_url(:reminders, "/rd/reminders/#{reminder.p_guid}"), { "methodOverride" => "PUT" }, {
+        "Reminders" => reminder.to_icloud,
+        "ClientState" => client_state
+      })
+    end
+
     def delete_reminder(reminder)
       ensure_logged_in
 
