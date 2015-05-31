@@ -16,13 +16,20 @@ module ICloud
 
       @user = nil
       @services = nil
-      @pool = Pool.new
 
       @http = {}
       @cookies = []
 
       @request_id = 1
       @client_id = client_id || default_client_id
+    end
+
+    def pool
+      unless @pool
+        @pool = Pool.new
+        update(get_startup)
+      end
+      @pool
     end
 
     #
@@ -39,8 +46,6 @@ module ICloud
       @user = Records::DsInfo.from_icloud(body["dsInfo"])
       @services = parse_services(body["webservices"])
 
-      update(get_startup)
-
       true
     end
 
@@ -56,13 +61,13 @@ module ICloud
 
     def collections
       ensure_logged_in
-      @pool.find_by_type(Records::Collection)
+      pool.find_by_type(Records::Collection)
     end
 
     def reminders
       ensure_logged_in
       update(get_completed)
-      @pool.find_by_type(Records::Reminder)
+      pool.find_by_type(Records::Reminder)
     end
 
     def post_reminder(reminder)
@@ -109,13 +114,13 @@ module ICloud
     def apply_changeset(cs)
       if cs.include?("updates")
         parse_records(cs["updates"]).each do |record|
-          @pool.add(record)
+          pool.add(record)
         end
       end
 
       if cs.include?("deletes")
         cs["deletes"].each do |hash|
-          @pool.delete(hash["guid"])
+          pool.delete(hash["guid"])
         end
       end
     end
@@ -123,7 +128,7 @@ module ICloud
     def update(*args)
       args.each do |hash|
         parse_records(hash).each do |record|
-          @pool.add(record)
+          pool.add(record)
         end
       end
     end
@@ -326,5 +331,15 @@ module ICloud
     def default_client_id
       "1B47512E-9743-11E2-8092-7F654762BE04"
     end
+
+    def marshal_dump
+      [@apple_id, @pass, @client_id, @request_id, @user, @services, @cookies]
+    end
+
+    def marshal_load(ary)
+      @apple_id, @pass, @client_id, @request_id, @user, @services, @cookies = *ary
+      @http = {}
+    end
+
   end
 end
