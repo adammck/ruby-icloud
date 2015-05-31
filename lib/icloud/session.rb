@@ -68,8 +68,9 @@ module ICloud
     def post_reminder(reminder)
       ensure_logged_in
 
+      path = "/rd/reminders/#{reminder.p_guid || 'tasks'}"
       # TODO: Should ClientState always be included in posts?
-      post(service_url(:reminders, "/rd/reminders/tasks"), { }, {
+      post(service_url(:reminders, path), { }, {
         "Reminders" => reminder.to_icloud,
         "ClientState" => client_state
       })
@@ -78,8 +79,9 @@ module ICloud
     def put_reminder(reminder)
       ensure_logged_in
 
+      path = "/rd/reminders/#{reminder.p_guid || 'tasks'}"
       # TODO: Should ClientState always be included in posts?
-      post(service_url(:reminders, "/rd/reminders/tasks"), { "methodOverride" => "PUT" }, {
+      post(service_url(:reminders, path), { "methodOverride" => "PUT" }, {
         "Reminders" => reminder.to_icloud,
         "ClientState" => client_state
       })
@@ -97,7 +99,8 @@ module ICloud
     def delete_reminder(reminder)
       ensure_logged_in
 
-      post(service_url(:reminders, "/rd/reminders/tasks"), { "methodOverride" => "DELETE", "id" => deletion_id }, {
+      path = "/rd/reminders/#{reminder.p_guid || 'tasks'}"
+      post(service_url(:reminders, path), { "methodOverride" => "DELETE", "id" => deletion_id }, {
         "Reminders" => [reminder.to_icloud],
         "ClientState" => client_state
       })
