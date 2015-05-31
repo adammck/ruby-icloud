@@ -28,9 +28,9 @@ module ICloud
     #
     # Public: Logs in to icloud.com or raises some subclass of Net::HTTPError.
     #
-    def login!
+    def login!(extended = false)
       uri = URI.parse("https://setup.icloud.com/setup/ws/1/login")
-      payload = { "apple_id"=>@apple_id, "password"=>@pass, "extended_login"=>false }
+      payload = { "apple_id"=>@apple_id, "password"=>@pass, "extended_login"=>extended }
 
       response = http(uri.host, uri.port).post(uri.path, payload.to_json, default_headers)
       @cookies = response.get_fields("set-cookie")
