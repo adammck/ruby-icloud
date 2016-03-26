@@ -15,7 +15,7 @@ bundle exec irb -r icloud
 irb(main):001:0> session = ICloud::Session.new("you@icloud.com", "passw0rd")
 => #<ICloud::Session:0x10637e040>
 irb(main):002:0> session.reminders.first(3).map(:title)
-=> ["Disregard females", "Acquire currency", "Do laundry"]
+=> ["Grocery shopping", "Acquire currency", "Do laundry"]
 ```
 
 
